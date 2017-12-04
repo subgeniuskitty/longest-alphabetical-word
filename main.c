@@ -10,6 +10,22 @@
 #include <stdint.h>
 
 /*
+ * Verify input data.
+ * Current requirements:
+ *   - All characters are lowercase
+ *   - No control characters other than newlines
+ */
+void verify_input( FILE * fp ) {
+    int c;
+    while((c = getc(fp)) != EOF) {
+        if(!((c == '\n') || ((c >= 'a') && (c <= 'z')))) {
+            fprintf(stderr, "Invalid input character: %c\n", c);
+            exit(EXIT_FAILURE);
+        }
+    }
+}
+
+/*
  * Determine the number of words in the dictionary file and the max word length.
  */
 void size_dict( FILE * fp, uint_fast32_t * word_count, uint_fast8_t * max_length ) {
