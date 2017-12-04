@@ -46,14 +46,13 @@ void size_dict( FILE * fp, uint_fast32_t * word_count, uint_fast8_t * max_length
 
 /*
  * Load each word from the dictionary file into an array.
- * This function mallocs memory.
  */
-void populate_dict( FILE * fp, char ** dict_array, uint_fast32_t word_count, uint_fast8_t max_length ) {
+void populate_dict( FILE * fp, char ** dict_array, uint_fast32_t * word_count, uint_fast8_t * max_length ) {
     int c;
-    int_fast32_t cw = word_count - 1;
+    int_fast32_t cw = *word_count - 1;
 
     for(int i = 0; cw >= 0; cw--, i = 0) {
-        dict_array[cw] = malloc(max_length + 1);
+        dict_array[cw] = malloc(*max_length + 1);
         while((c = getc(fp)) != '\n') {
             dict_array[cw][i++] = c;
         }
@@ -63,40 +62,82 @@ void populate_dict( FILE * fp, char ** dict_array, uint_fast32_t word_count, uin
 
 /*
  * Master function to load the dictionary file into a 2D array.
- * This function mallocs memory.
  */
-void load_dict( char ** dict_array ) {
-    uint_fast32_t word_count = 0;
+void * load_dict( uint_fast32_t * num_entries ) {
     uint_fast8_t max_length = 0;
-    FILE * fp;
+    FILE * fp = NULL;
 
     fp = fopen( DICTIONARY , "r" );
     if(fp) {
-        size_dict(fp, &word_count, &max_length);
+        verify_input(fp);
     } else {
         fprintf(stderr, "ERROR: Unable to open file " DICTIONARY "\n");
         exit(EXIT_FAILURE);
     }
 
-    printf("Word count: %d\nMax length: %d\n", word_count, max_length);
+    rewind(fp);
+    size_dict(fp, num_entries, &max_length);
 
     rewind(fp);
-    dict_array = malloc(word_count * sizeof(char*));
-    populate_dict(fp, dict_array, word_count, max_length);
+    char ** dict_array = malloc(*num_entries * sizeof(char*));
+    populate_dict(fp, dict_array, num_entries, &max_length);
+
+    fclose(fp);
+
+    return dict_array;
+}
+
+/*
+ * Prune entries from the dictionary array which do not have alphabetical character order.
+ */
+void prune_dict( char ** dict_array, uint_fast32_t * num_entries ) {
+    int_fast32_t cw = *num_entries - 1;
+
+    for(int i = 1; cw >= 0; cw--, i = 1) {
+        while(dict_array[cw][i] != '\0') {
+            if(!(dict_array[cw][i-1] <= dict_array[cw][i])) {
+                dict_array[cw][0] = '\0';
+                break;
+            }
+            i++;
+        }
+    }
+}
+
+/*
+ * Print entries from the dictionary in order of length.
+ */
+void print_dict( char ** dict_array, uint_fast32_t * num_entries ) {
+    uint_fast32_t cw = *num_entries - 1;
+    uint_fast8_t max_length = 0;
+
+    while(cw) {
+        if(dict_array[cw][0] != '\0') {
+            for(int i = 0; dict_array[cw][i] != '\0'; i++) {
+                if((i+1) > max_length) max_length = (i+1);
+            }
+        }
+        cw--;
+    }
+
+    while(max_length) {
+        cw = *num_entries - 1;
+        while(cw) {
+            for(int i = 0; dict_array[cw][i] != '\0'; i++) {
+                if(((i+1) == max_length) && (dict_array[cw][i+1] == '\0')) {
+                    printf("%d: %s\n", max_length, dict_array[cw]);
+                }
+            }
+            cw--;
+        }
+        max_length--;
+    }
 }
 
 int main( int argc, char ** argv ) {
-    char ** dict_array = NULL;
+    uint_fast32_t num_entries = 0;
 
-    load_dict(dict_array);
-
-    /*
-    scan array and delete ineligible entries
-      keep track of number of entries and max length
-    allocate new memory
-    load entries into new array, in order of length
-    free original array
-    print entries of new array
-    free new array
-    */
+    char ** dict_array = load_dict(&num_entries);
+    prune_dict(dict_array, &num_entries);
+    print_dict(dict_array, &num_entries);
 }
