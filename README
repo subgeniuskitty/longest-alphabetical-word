@@ -1,1 +1,15 @@
+################################################################################
+# Alphabetical Word Search
+################################################################################
+
+##### Description
+
+Searches a dictionary of words and returns ordered list of the longest words
+which have their characters in alphabetical order.
+
+##### Notes
+
 The files words.txt and words_alpha.txt are from github.com/dwyl/english-words.
+
+If providing an alternate dictionary file, all entries should be lowercase and
+all lines endings should be newlines. There should be no empty lines.
