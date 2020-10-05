@@ -3,7 +3,7 @@
 PREFIX = /usr/local
 
 CFLAGS = -std=c99 -Wall
-CC = gcc
+CC = cc
 
 SRC = main.c
 
@@ -18,4 +18,4 @@ alpha_dict:
 	@${CC} -o alpha_dict ${CFLAGS} ${SRC}
 
 clean:
-	@rm alpha_dict
+	@rm -f alpha_dict
